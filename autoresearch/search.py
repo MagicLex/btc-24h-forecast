@@ -69,24 +69,34 @@ FEE = 0.0004  # 4 bps per position change, applied in the backtest
 OUT = Path(ROOT) / "models" / "eval"
 DATA = Path(ROOT) / "data"
 
-# The search grid: linear, two tree ensembles, gradient boosting. Kept modest so the
-# walk-forward runs in a couple minutes; the point is honest comparison, not a zoo.
+# The search grid, round 2. Round 1 (MSE-loss ridge/RF/HGB/XGB) ALL lost to the
+# persistence baseline on MAE: an MSE learner predicts the conditional mean, but MAE
+# is minimized by the conditional median, which on BTC sits near zero -- the more
+# expressive the model, the more variance it chased and the more MAE it paid
+# (rf_d6 -3.1% .. hgb -17.5% lift). So the contenders now optimize absolute error
+# directly; two round-1 refs stay in for an honest side-by-side.
 MODELS = {
-    "ridge_a1":   lambda: make_pipeline(StandardScaler(), Ridge(alpha=1.0)),
-    "ridge_a10":  lambda: make_pipeline(StandardScaler(), Ridge(alpha=10.0)),
-    "rf_d6":      lambda: RandomForestRegressor(n_estimators=300, max_depth=6,
-                                                min_samples_leaf=50, n_jobs=-1, random_state=SEED),
-    "rf_d10":     lambda: RandomForestRegressor(n_estimators=300, max_depth=10,
-                                                min_samples_leaf=25, n_jobs=-1, random_state=SEED),
-    "hgb_lr05":   lambda: HistGradientBoostingRegressor(learning_rate=0.05, max_depth=3,
-                                                        max_iter=400, l2_regularization=1.0,
-                                                        random_state=SEED),
-    "hgb_lr02":   lambda: HistGradientBoostingRegressor(learning_rate=0.02, max_depth=4,
-                                                        max_iter=600, l2_regularization=1.0,
-                                                        random_state=SEED),
-    "xgb":        lambda: xgb.XGBRegressor(n_estimators=500, max_depth=4, learning_rate=0.03,
-                                           subsample=0.8, colsample_bytree=0.8,
-                                           reg_lambda=2.0, random_state=SEED, n_jobs=-1),
+    "ridge_a10":     lambda: make_pipeline(StandardScaler(), Ridge(alpha=10.0)),   # round-1 ref
+    "rf_d6":         lambda: RandomForestRegressor(n_estimators=300, max_depth=6,   # round-1 ref
+                                                   min_samples_leaf=50, n_jobs=-1,
+                                                   random_state=SEED),
+    "hgb_mae_lr05":  lambda: HistGradientBoostingRegressor(loss="absolute_error",
+                                                           learning_rate=0.05, max_depth=3,
+                                                           max_iter=400, l2_regularization=1.0,
+                                                           random_state=SEED),
+    "hgb_mae_lr02":  lambda: HistGradientBoostingRegressor(loss="absolute_error",
+                                                           learning_rate=0.02, max_depth=4,
+                                                           max_iter=600, l2_regularization=1.0,
+                                                           random_state=SEED),
+    "hgb_mae_deep":  lambda: HistGradientBoostingRegressor(loss="absolute_error",
+                                                           learning_rate=0.03, max_depth=6,
+                                                           max_iter=500, l2_regularization=0.5,
+                                                           min_samples_leaf=100,
+                                                           random_state=SEED),
+    "xgb_mae":       lambda: xgb.XGBRegressor(objective="reg:absoluteerror",
+                                              n_estimators=500, max_depth=4, learning_rate=0.03,
+                                              subsample=0.8, colsample_bytree=0.8,
+                                              reg_lambda=2.0, random_state=SEED, n_jobs=-1),
 }
 
 
