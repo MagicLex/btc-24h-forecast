@@ -4,12 +4,16 @@ What this system claims, and what it does not.
 
 ## The claim
 
-A gradient-boosted model over 46 multi-source causal features (price technicals,
-perp funding positioning, ETH cross-market, on-chain fundamentals, Fear & Greed
-sentiment) predicts the next-24h BTC log return with a walk-forward MAE a few
-percent below the random-walk baseline, and directional accuracy a few points above
-a coin flip. That is the honest ceiling for daily-scale BTC with public data; anyone
-claiming much more is leaking the future or overfitting a backtest.
+There isn't one, and that is the point. Over ~57k hourly bars (2019-2026), 46
+multi-source causal features (price technicals, perp funding positioning, ETH
+cross-market, on-chain fundamentals, Fear & Greed sentiment) and two rounds of
+model search, **no model beats the random-walk baseline on next-24h MAE** (best:
+-3.1% lift). The residue of signal is directional only (~52.6% out-of-sample vs a
+50% coin flip) with no usable magnitude. That is the honest ceiling for 24h BTC
+with public data; anyone claiming much more is leaking the future or overfitting
+a backtest. One caveat the other way: our "sentiment" input (Fear & Greed) is
+partly derived from price itself, so genuinely exogenous sentiment (news/social
+text) remains untested here.
 
 ## Why the numbers can be trusted
 

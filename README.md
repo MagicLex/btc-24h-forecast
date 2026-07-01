@@ -47,7 +47,30 @@ live, at request time.
 
 ## Results (walk-forward, out-of-sample)
 
-<!-- METRICS -->
+**The random walk wins.** Over ~57,000 hourly bars (Oct 2019 - Jun 2026), no model
+in the search beats the persistence baseline (predict zero) on MAE:
+
+| round | configs | best MAE | baseline MAE | lift | best dir-acc |
+|---|---|---|---|---|---|
+| 1: MSE losses | ridge, RF x2, HGB x2, XGB | 0.02168 (rf_d6) | 0.02104 | **-3.1%** | 52.4% |
+| 2: MAE losses | HGB-mae x3, XGB-mae + refs | 0.02168 (rf_d6) | 0.02104 | **-3.1%** | 52.6% |
+
+Two honest findings instead of one fake one:
+
+1. **Loss must match the metric.** Round 1's MSE learners predict the conditional
+   mean while MAE rewards the median (~0 for BTC); the more expressive the model,
+   the more variance it chased and the worse it got (HGB: -17.5%). Round 2 fixed
+   the loss (`absolute_error`) and the gap closed to a few percent -- but never
+   turned positive.
+2. **There is a sliver of direction, no magnitude.** MAE-loss models reach ~52.6%
+   directional accuracy out-of-sample (coin flip = 50%), yet still cannot price
+   *how far* the market moves. 46 causal features from five sources do not beat
+   an irrational market at 24h horizon. Anyone claiming otherwise on public data
+   is leaking the future.
+3. **What little signal exists is exogenous.** Permutation importance ranks the
+   cross-market and positioning features first (ETHBTC momentum, funding rate,
+   Fear & Greed 7-day change, mempool size) -- ahead of every price technical.
+   The multi-source thesis holds; the market just does not pay much for it.
 
 ![MAE per fold](assets/mae_per_fold.png)
 ![Backtest](assets/backtest.png)

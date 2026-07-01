@@ -161,9 +161,14 @@ st.caption(f"forecast for +24h: ${target:,.0f} (band ${lo:,.0f} - ${hi:,.0f})")
 # ---- honest model card --------------------------------------------------------
 st.subheader("Is this model actually better than nothing?")
 lift = (base_mae - mae) / base_mae * 100 if base_mae else 0.0
+verdict = ("the model has a thin real edge in magnitude."
+           if lift > 0 else
+           "**the random walk wins on magnitude** -- what survives is a thin "
+           "directional edge, which is why the stake suggestion above is tiny "
+           "and usually FLAT.")
 st.markdown(
     f"- champion walk-forward **MAE {mae:.5f}** vs random-walk baseline "
-    f"**{base_mae:.5f}** -> **{lift:+.2f}% lift**. On BTC that margin is real but thin.\n"
+    f"**{base_mae:.5f}** -> **{lift:+.2f}% lift**: {verdict}\n"
     f"- directional accuracy **{dir_acc*100:.1f}%** out-of-sample (coin flip = 50%).\n"
     f"- every number here is walk-forward: the model never saw the bars it is scored on."
 )
